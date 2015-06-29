@@ -29,11 +29,33 @@ class SettingsParserService
 
             // Check to see if token is a define statement
             if ( $id == T_STRING && $content == 'define' ) {
+                // Clean key
+                $key = $this->cleanConfigurationValue($tokens[$k + 2][1]);
+
+                $value = $this->cleanConfigurationValue($tokens[$k + 5][1]);
+
                 // save token name and value
-                $configuration[$tokens[$k + 2][1]] = $tokens[$k + 5][1];
+                $configuration[$key] = $value;
             }
         }
 
         return $configuration;
+    }
+
+    /**
+     * Clean token, strip any surrounding whitespace or apostrophes
+     *
+     * @param $token
+     * @return string
+     */
+    protected function cleanConfigurationValue($token)
+    {
+        // Trim whitespace
+        $token = trim($token);
+
+        // Remove unnecessary apostrophes
+        $token = preg_replace('/\'/', '', $token);
+
+        return $token;
     }
 }

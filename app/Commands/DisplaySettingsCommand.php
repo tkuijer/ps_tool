@@ -8,17 +8,12 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Filesystem\Exception\FileNotFoundException;
-use Symfony\Component\Filesystem\Filesystem;
 
 class DisplaySettingsCommand extends Command
 {
 
     /** @var PrestashopFinderService $finder_service */
     protected $finder_service;
-
-    /** @var string $basedir Directory in which the prestashop installation can be found */
-    protected $basedir;
 
     /** @var OutputInterface $output */
     protected $output;
@@ -28,12 +23,12 @@ class DisplaySettingsCommand extends Command
     /**
      * @var SettingsParserService
      */
-    private $parserService;
+    private $parser_service;
 
-    public function __construct(PrestashopFinderService $finderService, SettingsParserService $parserService)
+    public function __construct(PrestashopFinderService $finder_service, SettingsParserService $parser_service)
     {
-        $this->finder_service = $finderService;
-        $this->parserService = $parserService;
+        $this->finder_service = $finder_service;
+        $this->parser_service = $parser_service;
 
         parent::__construct();
     }
@@ -56,7 +51,6 @@ class DisplaySettingsCommand extends Command
         $this->output  = $output;
         $this->input   = $input;
 
-        $this->basedir = $this->finder_service->getRootFolder();
         $this->displaySettingsFile();
     }
 
@@ -65,20 +59,10 @@ class DisplaySettingsCommand extends Command
      */
     protected function displaySettingsFile()
     {
-        $fs = new Filesystem();
-        $settings_path = $this->basedir . 'config' . DS . 'settings.inc.php';
-
-        // Check if configuration file exists
-        if( ! $fs->exists($settings_path)) {
-            throw new FileNotFoundException('settings.inc.php was not found.');
-        }
-
-        // Get contents of settings file
-        $settings = file_get_contents($settings_path);
-        $configuration = $this->parserService->parseSettings($settings);
+        $settings      = $this->finder_service->getSettingsFile();
+        $configuration = $this->parser_service->parseSettings($settings);
 
         $this->renderTable($configuration);
-
     }
 
     /**
