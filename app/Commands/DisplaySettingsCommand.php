@@ -3,6 +3,7 @@
 namespace Prestatool\Commands;
 
 use Prestatool\Services\PrestashopFinderService;
+use Prestatool\Services\SettingsParserService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,10 +25,15 @@ class DisplaySettingsCommand extends Command
 
     /** @var InputInterface $input */
     protected $input;
+    /**
+     * @var SettingsParserService
+     */
+    private $parserService;
 
-    public function __construct(PrestashopFinderService $finderService)
+    public function __construct(PrestashopFinderService $finderService, SettingsParserService $parserService)
     {
         $this->finder_service = $finderService;
+        $this->parserService = $parserService;
 
         parent::__construct();
     }
@@ -69,42 +75,10 @@ class DisplaySettingsCommand extends Command
 
         // Get contents of settings file
         $settings = file_get_contents($settings_path);
-        $configuration = $this->parseSettings($settings);
+        $configuration = $this->parserService->parseSettings($settings);
 
         $this->renderTable($configuration);
 
-    }
-
-    /**
-     * Parse settings file contents by tokenizing and extracting the data we require
-     *
-     * @param $settings
-     * @return array
-     */
-    protected function parseSettings($settings)
-    {
-        // tokenize settings file contents
-        $tokens = token_get_all($settings);
-        $configuration = [];
-
-        // walk through all tokens
-        foreach ( $tokens as $k => $token )
-        {
-            if ( ! is_array($token) ) {
-                continue;
-            }
-
-            // extract token type, and content
-            list($id, $content) = $token;
-
-            // Check to see if token is a define statement
-            if ( $id == T_STRING && $content == 'define' ) {
-                // save token name and value
-                $configuration[$tokens[$k + 2][1]] = $tokens[$k + 5][1];
-            }
-        }
-
-        return $configuration;
     }
 
     /**
