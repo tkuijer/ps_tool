@@ -54,15 +54,20 @@ class DisplaySettingsCommand extends Command
         $this->displaySettingsFile();
     }
 
+    /**
+     * Read settings.inc.php file contents, parse them and display them in tabular format
+     */
     protected function displaySettingsFile()
     {
         $fs = new Filesystem();
         $settings_path = $this->basedir . 'config' . DS . 'settings.inc.php';
 
+        // Check if configuration file exists
         if( ! $fs->exists($settings_path)) {
             throw new FileNotFoundException('settings.inc.php was not found.');
         }
 
+        // Get contents of settings file
         $settings = file_get_contents($settings_path);
         $configuration = $this->parseSettings($settings);
 
